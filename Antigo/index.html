@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Temperamento - O Conhecimento de Si Mesmo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .result-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #1e3a8a;
+        }
+        .gemini-plan h4 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #1e3a8a;
+        }
+        .gemini-plan ul { list-style-type: disc; padding-left: 20px; }
+        .gemini-plan li { margin-bottom: 0.5rem; }
+        .loader { border: 4px solid #f3f3f3; border-radius: 50%; border-top: 4px solid #3498db; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .nav-btn { transition: all 0.2s ease-in-out; }
+        .nav-btn.active { background-color: #3b82f6; color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+        .result-chart { border: 2px solid #333; border-radius: 8px; overflow: hidden; }
+        .chart-row { display: grid; grid-template-columns: 120px repeat(11, 1fr); border-bottom: 1px solid #ccc; }
+        .chart-row:last-child { border-bottom: none; }
+        .chart-header { background-color: #f0f0f0; font-weight: bold; }
+        .chart-cell, .chart-label { padding: 8px; text-align: center; border-right: 1px solid #ccc; }
+        .chart-cell:last-child, .chart-label:last-child { border-right: none; }
+        .chart-label { font-weight: 600; background-color: #f9fafb; }
+        .chart-marker { font-weight: bold; font-size: 1.2em; color: #000; }
+        .emotividade-neg { background-color: #fee2e2; }
+        .emotividade-pos { background-color: #ef4444; color: white; }
+        .atividade-neg { background-color: #dcfce7; }
+        .atividade-pos { background-color: #22c55e; color: white; }
+        .ressonancia-neg { background-color: #dbeafe; }
+        .ressonancia-pos { background-color: #3b82f6; color: white; }
+
+        /* Estilos Typeform */
+        #quiz-screen-typeform {
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .question-slide {
+            position: absolute;
+            width: 100%;
+            max-width: 700px;
+            padding: 20px;
+            text-align: left;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            opacity: 0;
+            transform: translateX(25px); /* Começa à direita */
+        }
+        .question-slide.active {
+            opacity: 1;
+            transform: translateX(0); /* Entra no centro */
+        }
+        .question-slide.exiting {
+            opacity: 0;
+            transform: translateX(-25px); /* Sai para a esquerda */
+        }
+        .option-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: white;
+        }
+        .option-btn:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .option-key {
+            background-color: #3b82f6;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+        #progress-bar-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #e5e7eb;
+        }
+        #progress-bar {
+            height: 8px;
+            width: 0%;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app" class="container mx-auto p-4 sm:p-6 md:p-8 max-w-4xl">
+        
+        <nav class="bg-white p-2 rounded-xl shadow-md flex justify-center space-x-2 mb-4">
+            <button id="nav-my-result" class="nav-btn font-semibold py-2 px-4 rounded-lg">Meu Resultado</button>
+            <button id="nav-all-temperaments" class="nav-btn font-semibold py-2 px-4 rounded-lg">Os 8 Temperamentos</button>
+        </nav>
+
+        <main id="main-content">
+            <div id="start-screen" class="text-center bg-white p-8 rounded-2xl shadow-lg">
+                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Descubra seu Temperamento</h1>
+                <p class="text-lg text-gray-600 mb-2">Baseado nos estudos caracterológicos de Heymans, Wiersma e Le Senne.</p>
+                <p class="text-md text-gray-500 mb-6 max-w-2xl mx-auto">Este questionário o ajudará a identificar suas disposições naturais mais profundas. Para um resultado preciso, responda com sinceridade, indicando seu modo natural de agir, não o ocasional. Se possível, lembre-se de como você agia quando criança.</p>
+                <button id="start-btn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-colors shadow-md text-lg">
+                    Iniciar o Teste
+                </button>
+            </div>
+
+            <div id="quiz-screen-typeform" class="hidden">
+                <!-- O quiz estilo Typeform será renderizado aqui -->
+            </div>
+            <div id="progress-bar-container" class="hidden">
+                <div id="progress-bar"></div>
+            </div>
+
+            <div id="result-screen" class="hidden bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                <p id="result-pre-title" class="text-center text-gray-600"></p>
+                <h2 id="temperament-title" class="text-4xl sm:text-5xl font-bold text-center text-blue-800 mb-6"></h2>
+                <div id="result-chart-container" class="mb-8"></div>
+                <div id="temperament-description" class="prose max-w-none text-gray-700 result-section"></div>
+                <div id="gemini-section" class="mt-10 pt-6 border-t-2 border-gray-200">
+                    <h3 class="text-2xl font-bold text-center text-gray-900 mb-4">✨ Plano de Crescimento Personalizado com IA</h3>
+                    <p class="text-center text-gray-600 mb-6">Obtenha conselhos práticos gerados por IA para trabalhar em suas fraquezas e potencializar suas virtudes.</p>
+                    <div class="text-center">
+                        <button id="gemini-btn" class="bg-purple-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-purple-700 transition-colors shadow-md text-lg">
+                            Gerar Plano de Crescimento
+                        </button>
+                    </div>
+                    <div id="gemini-loader" class="hidden loader"></div>
+                    <div id="gemini-result" class="mt-6 p-4 bg-gray-50 rounded-lg gemini-plan"></div>
+                </div>
+                <div id="actions-section" class="text-center mt-10">
+                    <button id="retake-btn" class="bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 transition-colors">
+                        Fazer o teste novamente
+                    </button>
+                </div>
+            </div>
+
+            <div id="all-temperaments-screen" class="hidden bg-white p-8 rounded-2xl shadow-lg">
+                 <h2 class="text-3xl font-bold text-center text-gray-900 mb-6">Os 8 Temperamentos</h2>
+                 <p class="text-center text-gray-600 mb-8">Clique em um temperamento para ver sua descrição detalhada.</p>
+                 <div id="temperament-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const quizData = {
+            emotividade: [
+                { question: "1. Quando algo não acontece como você deseja, ou 'sai pior' do que o previsto:", a: "Você fica interiormente muito nervoso (sem poder evitá-lo), embora nem sempre o demonstre externamente?", b: "Ou pelo contrário, aceita com calma interior os contratempos, sem ter que fazer grande esforço para isso, porque você é naturalmente tranquilo?", bIsFirst: false },
+                { question: "2. Quando lhe corrigem, criticam, contradizem, ou zombam de você:", a: "Você sente-se ofendido em seu interior, experimentando impulsos de raiva ou de tristeza?", b: "Ou instintivamente você não dá importância a estas coisas?", bIsFirst: false },
+                { question: "3. Seu humor e estado de ânimo:", a: "Ou você passa facilmente da alegria à tristeza, do entusiasmo ao desânimo, por coisas de pouca importância, e -às vezes- sem saber por que?", b: "É sempre equilibrado, aconteça o que acontecer?", bIsFirst: true },
+                { question: "4. Quando você fica sabendo de notícias importantes (muito boas ou muito más) que acontecem no mundo:", a: "Você entusiasma-se ou se indigna facilmente? (Embora não o manifeste exteriormente).", b: "Ou geralmente você permanece tranquilo, exterior e interiormente?", bIsFirst: false },
+                { question: "5. Quando você experimenta uma emoção forte:", a: "Empalidece ou fica vermelho facilmente, sem poder evitá-lo?", b: "Ou isso acontece só em alguma ocasião excepcional?", bIsFirst: false },
+                { question: "6. Quando você fala com seus amigos:", a: "Usa com frequência palavras expressivas: ('espetacular', 'fantástico', 'horroroso', 'horrível'); exageradas: ('isto é o melhor que aconteceu na minha vida', 'isso é a melhor coisa do mundo'); pouco finas; ou vulgares?", b: "Ou não as usa quase nunca, porque você sempre se expressa de modo normal e moderado?", bIsFirst: false },
+                { question: "7. Quando você conta alguma coisa ou refere o que ouviu de outros:", a: "Ou exagera, inventando detalhes que engrandecem ou pioram o relatado?", b: "Você menciona os dados assim como aconteceram ou como os ouviu?", bIsFirst: true },
+                { question: "8. Ante um barulho inesperado ou algum acontecimento surpreendente e repentino:", a: "Você impressiona-se ou sobressalta-se facilmente, sofrendo uma comoção interior?", b: "Ou você não costuma sobressaltar-se, por ser de temperamento tranquilo?", bIsFirst: false },
+                { question: "9. Quando você não encontra a solução de um problema:", a: "Você sente-se angustiado e preocupado por isso?", b: "Ou pode esperar tranquilamente e sem preocupação, até encontrar a solução desse problema?", bIsFirst: false },
+                { question: "10. Antes de uma prova ou de um evento importante:", a: "Você sente-se agitado, ansioso, nervoso (dorme mal, perde [ou aumenta] o apetite, fica inquieto)?", b: "Ou se mantém tranquilo e sereno, sem mudar seus costumes ou modos de vida?", bIsFirst: false }
+            ],
+            atividade: [
+                { question: "1. Quando não lhe agita alguma emoção:", a: "Você é naturalmente inquieto? (Gesticula, salta vivamente da cadeira, vai e vem em seu quarto, sem que a isso o mova uma emoção viva, mas sim por necessidade de mover-se).", b: "Ou você está geralmente quieto?", bIsFirst: false },
+                { question: "2. Quando você tem uma ideia ou projeto para realizar:", a: "Ou executa imediatamente e sem dificuldade o que decidiu?", b: "É-lhe necessário um esforço nítido para passar da ideia ao ato, da decisão à execução?", bIsFirst: true },
+                { question: "3. Quando você tem que fazer uma tarefa ou trabalho:", a: "Faz o que tem para fazer imediatamente e sem que isso lhe custe muito (escrever uma carta, resolver um assunto, etc.)?", b: "Ou instintivamente tende a atrasar, a 'esperar um momento', etc.? (Embora consiga dominar essa tendência; porém a sente).", bIsFirst: false },
+                { question: "4. Quando você percebe que outras pessoas (amigos ou familiares) precisam de ajuda:", a: "Ajuda-os espontaneamente, sem que o peçam, e o faz com prazer?", b: "Ou deixa que se virem sozinhos, enquanto você fica olhando?", bIsFirst: false },
+                { question: "5. Depois de realizar suas obrigações:", a: "Ou não pode ficar quieto, ocupando-se sempre em alguma atividade, até mesmo em tempo de descanso?", b: "Você aproveita os tempos livres 'descansando' plenamente?", bIsFirst: true },
+                { question: "6. Em seus projetos e trabalhos:", a: "Tenta sempre melhorá-los, embora isso implique esforço e sacrifício?", b: "Ou ante o esforço e sacrifício que essas melhoras implicam, tende instintivamente a deixar as coisas como estão?", bIsFirst: false },
+                { question: "7. Frente a trabalhos cansativos, difíceis, longos e que aborrecem:", a: "Ou demonstra valor, decisão e perseverança até terminá-los?", b: "Você se desanima com facilidade, ou inclusive renuncia antes de começar?", bIsFirst: true },
+                { question: "8. Ao realizar seu trabalho ou quando estuda:", a: "Ou geralmente você trabalha more rapidamente que outros, inclusive fazendo-o bem e com precisão?", b: "Você acusa-se com frequência de ser lento, gastar muito tempo ou não terminar nunca?", bIsFirst: true },
+                { question: "9. Quando você faz alguma atividade recreativa (esportes, jogos, etc.):", a: "Prefere os esportes que requerem movimento e fadiga física?", b: "Ou pelo contrário, agradam-lhe os jogos tranquilos; ou inclusive diverte-se sozinho?", bIsFirst: false },
+                { question: "10. Depois de um grande esforço físico:", a: "Você recupera-se com rapidez? (Depois de um descanso relativamente breve se sente com novas forças, 'disposto a recomeçar').", b: "Ou, por constituição fisiológica, você precisa descansar por muito tempo para recuperar suas forces? (Embora você seja fisicamente robusto).", bIsFirst: false }
+            ],
+            ressonancia: [
+                { question: "1. Se você se sentir ofendido por alguma injúria recebida:", a: "Ou esses sentimentos permanecem por algum tempo em seu interior, fazendo difícil a imediata reconciliação?", b: "Esquece rapidamente os sentimentos produzidos por essas ofensas, de modo que pode reconciliar-se prontamente com a pessoa que o ofendeu?", bIsFirst: true },
+                { question: "2. Quando tem que realizar alguma atividade ou trabalho:", a: "Ou sente instintivamente repulsa a toda improvisação, gosta de planejar seus projetos e em sua ação tenta ser fiel ao que previamente planejou?", b: "Você é naturalmente improvisado, decidindo em cada momento o que deve ser feito, sem muitos planos prévios; ou, se fizer planos, depois no momento de atuar, não se sujeita a eles, pois sempre lhe ocorrem novas ideias ou projetos?", bIsFirst: true },
+                { question: "3. Se você prometeu algo a outro, ou se tiver feito um propósito:", a: "Ou geralmente não esquece o que prometeu? (Embora tarde em cumpri-lo, por qualquer outro motivo).", b: "Você esquece-o com facilidade?", bIsFirst: true },
+                { question: "4. Em sua rotina habitual:", a: "Incomoda-lhe muito ter que trocar de horário e sair de sua habitual e ordenada distribuição do tempo?", b: "Ou pelo contrário, não gosta de sujeitar-se a um horário ordenado?", bIsFirst: false },
+                { question: "5. Se tiver tido um fracasso:", a: "Ou pensa nisso continuamente e fica um bom tempo magoado pela impressão negativa?", b: "Esquece facilmente o que aconteceu e em pouco tempo já não pensa nisso?", bIsFirst: true },
+                { question: "6. Se você tiver um projeto e não sai como esperava:", a: "Ou não se resigna e trata de realizá-lo, ainda que leve mais tempo?", b: "Você resigna-se e começa a trabalhar em outro projeto?", bIsFirst: true },
+                { question: "7. Quando lhe oferecem a possibilidade de mudar (casa, trabalho, grupo, etc.):", a: "Ou pelo contrário, lhe incomoda trocar, e gosta do usual e conhecido? (Agrada-lhe sua casa, seu lugar de trabalho, sua tarefa de cada dia; frequentar às mesmas pessoas, etc.).", b: "Você adora tudo o que implique novidade e mudança? (Novo domicílio, novas ocupações).", bIsFirst: true },
+                { question: "8. Quando você formou uma opinião:", a: "É difícil lhe convencer de outra coisa? você se mantém firme (pelo menos em seu interior) em relação ao que considera verdadeiro, embora de fato não goste de discutir?", b: "Ou com facilidade (instintivamente) tende a concordar com a opinião dos outros?", bIsFirst: false },
+                { question: "9. Em seus projetos e planos:", a: "Você é naturalmente constante e geralmente acaba o que começou?", b: "Ou frequentemente sente o desejo de abandonar uma coisa antes de acabá-la, para começar outra mais fácil ou mais interessante, começando muitas coisas e acabando poucas?", bIsFirst: false },
+                { question: "10. Em seus gostos:", a: "Você é constante? (Não gosta de mudar).", b: "Ou se cansa das mesmas coisas e prefere mudar?", bIsFirst: false }
+            ]
+        };
+        const temperamentsData = {
+            Apaixonado: { description: `Trata-se de um temperamento emotivo (isto é, impressionável diante de qualquer tipo de estímulo), ativo (com uma tendência interior à ação, não importa se tem metas definidas ou não) e secundário (ou seja, guarda as impressões recebidas por um longo tempo e está muito ligado ao seu passado). O apaixonado, em geral, tem dificuldade em ser inativo, mas não é impulsivo, e sim enérgico, embora se exteriorize pouco. Portanto, quando transborda, é violento e avassalador. Sabe se lembrar das lições de experiências passadas e tirar proveito delas no futuro. Sua iniciativa e comprometimento são muito amplos, embora exteriormente calmos, exceto em casos excepcionais, e conscientemente direcionados para fins distantes e constantes. Seus sentimentos e paixões são fortes, se aprofundam firmemente e nele se enraízam, influenciando seu comportamento por um longo tempo. Diante das injúrias, sua raiva se acende internamente, ainda que não se exteriorize imediatamente; se elas se repetem, acaba explodindo em uma tempestade de ira duradoura que facilmente se transforma em rancor e desejo de vingança. Diante do perigo, ele primeiro reflete e depois toma uma decisão. Se decide atacar, continua com uma violência sem precedentes até vencer ou morrer; se julgar que deve adotar uma atitude passiva, é tenaz nessa postura. As faltas próprias e alheias causam-lhe um grande aborrecimento e se propõe corrigi-las firmemente. Ele é constante na ação, imutável em seus julgamentos, às vezes até à teimosia. Tem sentimentos estáveis de tal maneira que sua amizade é muito fiel mesmo depois de um longo tempo, mas também é difícil para ele esquecer uma ofensa e perdoar. Tem uma notável capacidade de organização e comando não tanto de modo simpático e atraente, mas eficaz, vigoroso e ordenado. Enérgico e sem grande perigo de dispersão; sabe ser firme, sistemático e orientado para um fim, ao qual se aproxima por etapas bem meditadas. Sua inteligência é ampla e bastante dedutiva. Sua imaginação é fecunda e costuma ter uma excelente memória. Está interessado em problemas sociais, morais, religiosos e filosóficos. Ele é naturalmente honrado e digno de confiança. Sabe ser fiel à sua palavra. Em relação aos menos dotados, adota espontaneamente uma atitude de proteção e ajuda compassiva. Na vida social é desordenado e simples, sem grande inclinação para a diplomacia sinuosa, nem tampouco para disputa repentina. Exteriormente é, em geral, correto, embora pouco efusivo.`, positives: `Quando canalizado para um grande ideal, ele é capaz de uma consagração, abnegação e atividade extraordinárias. Seu rigor lógico no pensamento, sua memória, inventividade e eficiência na execução o habilitam para grandes realizações, em cuja direção ou alta liderança pode alcançar objetivos notáveis. Leva muito a sério seus próprios assuntos e os que lhe são confiados, e é digno de confiança quando dá sua palavra ou promete alguma coisa. Sabe agregar exatidão na direção dos subordinados, embora, às vezes não tenha uma simpatia atraente; no final, ele é consequente com sua retidão natural, ele se impõe por sua justiça e nobreza. Não esquece os favores e é agradecido. Seu poder de previsão e senso de responsabilidade é notável. Ele é um diretor ou chefe nato, com tendência afetiva e fundada em grandes planos e objetivos. Tem, geralmente, grandes aspirações em qualquer campo a que se dedique. É apto para quase todas as carreiras superiores, mas não tanto para a arte. Se orientar bem sua vida spiritual, terá dotes para um apostolado frutífero e não se contentará com mediocridades, mas aspirará à autêntica santidade. Generoso e altruísta, requer contato íntimo com Deus.`, negatives: `Tem grandes paixões que não são facilmente apagadas. Custa-lhe a submissão a um superior. Ele pode ser suscetível, crítico, desconfiado, assim como tornar-se mal-humorado. Quando odeia, faz isso de todo o coração e é difícil fazê-lo se reconciliar com seu inimigo. Tende, espontaneamente, ao rancor e à vingança. Também à teimosia. Sua paixão muitas vezes obscurece seu julgamento, tornando suas críticas severas e muitas vezes injustas. Seu amor próprio também é notável, pois ele não aceita ser vencido ou superado por ninguém. Não é incomum notar nele impaciência em relação aos defeitos dos outros e desconfiança em relação a algumas pessoas. Na ação, com frequência, peca devido ao excesso de energia que o leva a ser duro e exigente com os outros. Independente em excesso, muito orgulhoso, custa-lhe o trabalho e as humilhações. Em suas tarefas, procura agir sozinho.`, education: `É necessário ensinar-lhe a canalizar as suas energias na busca da santidade e das virtudes necessárias a seu temperamento, as quais são: Humildade: para vencer seu orgulho e amor próprio. Paciência e misericórdia: com os defeitos do próximo. Deve tratar a todos com suavidade e doçura. Juízo caridoso: sempre tentar pensar bem do próximo. É o remédio contra a sua disposição às críticas. Flexibilidade na opinião: para vencer a sua teimosia. Desapego de suas obras: que no fundo seria desapego de fazer a sua própria vontade (de impor seu modo de fazer as coisas). Deve fazer as obras sem colocar o coração nelas. Totalmente flexíveis para mudar o modo, e até a mesma obra, se o superior o pedir.` },
+            Colérico: { description: `É emotivo (isto é, impressionável diante de qualquer tipo de estímulo), ativo (com uma tendência interior à ação, não importa se tem metas definidas ou não) e primário (isto é, de reações imediatas, mas com um rápido retorno ao seu estado anterior, ou seja, fácil de acalmar). Como características gerais, apontemos antes de tudo sua atividade exuberante e modo impulsivo. Procura tarefas nas quais pode descarregar seu impulso vital. Ele é combativo e entusiasta; empreendedor e de grande iniciativa. Geralmente otimista e alegre e, embora passe fácil e rapidamente de um sentimento para outro, sua grande combatividade provoca continuamente entusiasmo e ardor pelo desenvolvimento de suas atividades. Muitas vezes essa atividade é febril, sem grande constância em uma mesma direção nem profundidade de seu trabalho. Seus sentimentos são abundantes, fortes, expansivos ao mais alto grau. Tem uma inclinação inata para comunicar o que pensa e sente, para o qual ajuda a sua notável facilidade de fala. Todas as suas paixões têm uma nuance extrema. É adequado para grandes empresas, pois não pode se resignar com vistas estreitas nem meios termos. Diante de insultos, reage violentamente pela palavra e vai às vias de fato sem esperar incitações repetidas. Em momentos de perigo, se exalta e se enche de entusiasmo, lançando-se ao ataque sem parar para calcular as consequências. Quando comete uma falta, se enche de indignação. Diante das falhas de outras pessoas, repreende e busca correção. Tem um instinto de comando e dominação e não se contenta com a posição de súdito. Sua inteligência é rápida e penetrante, intuitiva, não raramente de uma vasta capacidade. Sua aparência externa geralmente está de acordo com seu modo de ser: feições masculinas, olhar decidido, passo firme e movimentos enérgicos.`, positives: `Sua fortaleza natural, audácia e valentia o habilitam para grandes feitos. É um homem de ideais elevados. Tem capacidade para posições de importância na vida social. Conta com uma vontade decidida e um escopo muito amplo. Esse tem sido o caráter peculiar de muitos chefes famosos. Apto para política, para o ensino, para a direção, tem grande talento de improvisação e qualidades de orador. Com frequência organiza adequadamente as atividades do grupo social ao qual pertence e nele sabe como seduzir com seu otimismo comunicativo. Aficionado por esportes e muito apto para eles. Na vida espiritual, pode alcançar um notável grau de santidade, ajudado pela graça divina.`, negatives: `Vive o momento presente exclusivamente interessado em resultados imediatos. Corre grande perigo de dispersão e de desperdiçar seu grande fluxo vital, iniciando muitas coisas sem terminá-las, se comprometendo com mais tarefas do que será capaz de realizar ou tendo simultaneamente várias ocupações sem realizar bem nenhuma delas. Por ser impulsivo, pode facilmente tomar decisões arriscadas, sem prever as consequências. Sua riqueza psicológica e o reconhecimento de sua superioridade em ação podem facilmente levá-lo ao orgulho ou à vaidade. Confia em si mesmo e sempre quer impor sua vontade aos outros. É difícil para ele reconhecer seus defeitos e facilmente critica os defeitos alheios. É indulgente consigo mesmo e exigente com os outros. Pode defender suas deficiências como se fossem boas qualidades e ainda se gloriar em suas faltas. Pode ser tão irascível que não admite a menor contradição sem que se desate em cólera, chegando às vezes até à crueldade. Outro perigo em sua ação é que, ao desejar vivamente seus fins, chegue a usar meios indignos para alcançá-los.`, education: `Têm que ser donos de si mesmos para poder controlar suas fortes paixões: sobretudo a ira e a sensualidade. Para isso será necessário que sejam pacientes e temperantes. Contra a superficialidade: devem habituar-se a pensar antes de agir, aprendendo a não agir precipitadamente e a desconfiar de seus primeiros impulsos. Também devem ser profundos, tentando chegar ao fundo do assunto, antes de julgar. Devem planejar bem as suas obras antes de começá-las e seguir com fidelidade e constância o plano traçado até terminá-lo, antes de começar uma outra obra. Devem ser humildes para não cair no orgulho ou na vanglória: evitando aparecer através de suas habilidades e destrezas. Ser prudentes e prever as consequências de suas decisões, para que não aconteça que uma excessiva e infundada confiança no bom êxito da obra, os leve a tomar decisões arriscadas.` },
+            Sanguíneo: { description: `É não-emotivo (isto é, não é facilmente impressionável), ativo (com uma tendência interna à ação, não importa se definiu objetivos ou não) e primário (isto é, reage de imediato, mas também retorna rapidamente ao estado anterior). Não pode estar inativo, embora normalmente não seja constante em continuar o que foi iniciado. Geralmente está sempre alegre, sorridente, loquaz, de conversa viva e animada. Gosta de exagerar, de fazer barulho, de animação. Sociável, atencioso e cortês; gosta do companheirismo e das amizades. Ama a liberdade. Na política e na religião, não se mostra um apaixonado; em geral, suas paixões não são muito fortes. Costuma ter disposição para a música e gosta de esportes. Sua imaginação é viva. Embora precise de ocupação contínua, prefere o mais agradável, aprazível e chamativo. Deixa-se levar facilmente pelas aparências e, por isso, frequentemente é superficial em seus julgamentos. Para perseverar em um trabalho iniciado, precisa sempre de novos estímulos, sempre quer variar e, portanto, em sua generosidade, dificilmente alcança a doação total. Expansivo e efusivo, tudo o que pensa comenta, discute e comunica com os outros. Não se irrita facilmente diante das ofensas e, se o faz, logo se lança sem reflexão. Não se acovarda facilmente. Quando comete alguma falta, se consola facilmente e renova os bons propósitos.`, positives: `É pessoa de bom trato na vida social. Afável, bondoso, cheio de alegria e bom humor, espirituoso e comunicativo, muito prestativo e cortês com todos. Percebe facilmente do que os outros precisam e fica feliz em ajudar. Compassivo e misericordioso com as fraquezas dos outros. Possui notável sentido prático e inteligência intuitiva. Não se preocupa com angústia nem mergulha profundamente nos problemas. Tem um tato especial para repreender as faltas alheias com delicadeza, mas também com sinceridade. Gosta de sempre dizer a verdade, pouco partidário de simulações. Não guarda rancor de ninguém. Perdoa facilmente. Muito dócil às indicações dos superiores, as quais segue com simplicidade de espírito.`, negatives: `Seu principal problema é a falta de reflexão, se deixando levar pelo gosto e pelos primeiros impulsos e não pela razão. É superficial. Não tem muito discernimento. Custa-lhe muito a disciplina e a mortificação. Seus apetites e imaginações transbordam facilmente; se deixa levar por qualquer um que, à primeira vista, pareça atraente e compreensivo, sendo sua personalidade pouco sólida e séria.`, education: `Deve incentivar as boas qualidades, e lutar contra os defeitos: Contra a superficialidade, deve trabalhar para adquirir o hábito da reflexão e ponderação de tudo o que faça. Pensar bem antes de agir. Contra a inconstância deve procurar ter um plano de vida, fazer bem o exame de consciência, pôr-se nas mãos do diretor espiritual e obedecer-lhe em tudo. Na oração deve lutar contra as distrações e a tendência aos consolos sensíveis. Contra a sensualidade, deve vigiar constantemente, ser disciplinado no comer, fugir das ocasiões perigosas, guardar a vista e o recolhimento interior.` },
+            Sentimental: { description: `É emotivo (isto é, impressionável diante de qualquer tipo de estímulo), não ativo (não tende interiormente à ação) e secundário (guarda as impressões recebidas por um longo tempo e está muito ligado ao seu passado). Como traços gerais, se destacam a profundidade e a perseverança dos sentimentos que, no entanto, pouco se manifestam exteriormente. É muito sensível a todos os tipos de emoções ou impressões externas, mas a reação íntima está concentrada nas profundezas da alma e ali é tenazmente gravada e ainda mais acentuada. Por exemplo, quando recebe uma ofensa não é incomum que pareça pouco impressionado exteriormente, mas, quando sozinho, saboreará seu ressentimento aumentando a ofensa em sua imaginação. Se os insultos forem repetidos, chegará um momento em que explodirá violentamente, tendo grande dificuldade em se reconciliar, devido à profundidade que a ferida toma em seu espírito. Por outro lado, na amizade ele é fiel e constante. Não costuma ter muitos amigos e prefere um pequeno grupo de pessoas íntimas. Lembra e agradece qualquer favor e atenção que recebe. Não muito propenso ao riso e à expansão, mas à seriedade, à melancolia e aos escrúpulos. Seu forte não é a atividade física ou intelectual, mas a afetividade. Facilmente comovido com os males dos outros e vendo tantas misérias no mundo, gostaria de remediá-las. Pode sofrer mais que os outros pelos defeitos alheios e pode se tornar suscetível. Ele é muito propenso à reflexão e análise de si mesmo. É indeciso, volta mil vezes sobre seus sentimentos e ações, o que, juntamente com seu profundo senso moral, o impede em muitas ocasiões de avançar e agir; ele sempre teme que não tenha feito bem as coisas e de modo reto. Na ação é bastante lento e geralmente não costuma empreender obras por sua própria iniciativa. Em momentos de perigo se mostra desconcertado e prefere uma atitude mais passiva do que ativa na defesa. Diante de suas próprias faltas, se desanima com facilidade e perde esperança em se corrigir. Diante das falhas alheias, se revolta interiormente, embora muitas vezes não consiga remediá-las. Não tem muito sentido prático; é sonhador e pode ter dons literários. É sensível a mudanças climáticas. Tem uma concepção séria da vida e geralmente ama tudo o que seja grande e profundo. Seu comportamento comum é de doçura e amabilidade exterior. Embora não se ofereça espontaneamente, ajuda quando requisitado. Muito apto para obras que exigem consagração, silêncio e caridade. Sua perseverança é uma característica marcante. Cumpridor de seu dever, percebe suas responsabilidades e tenta atendê-las com cuidado. É de aparência simples e pouco amigo de ostentação.`, positives: `Ele é gentil e honrado; incapaz de ser cruel ou áspero com os outros, embora exteriormente sua reserva pareça apatia. Com frequência lhe agrada cuidar dos doentes. Compensa sua limitada propensão à ação com sua facilidade de oração. Em geral, encontra conforto e paz interior em contato íntimo com Deus. Simples, humilde e digno de confiança, pouco inclinado à sensualidade. Propenso a ajudar os outros. Perseverante; trabalhador profundo, responsável em suas obrigações. Nesse tipo abundam os moralistas, pedagogos, psicólogos, etc., assim como escritores e críticos de arte.`, negatives: `Pode pecar por indecisinão. Tende ao desânimo e a subestimar suas próprias qualidades, o que pode levar ao pessimismo, amargura ou timidez incômoda para si e para os outros. Como compensação, pode se acostumar a julgar e qualificar interiormente seu próximo com falta de caridade. O perigo do orgulho e da soberba interior afetiva não é incomum e se apresenta como compensação por sentir-se inferior em relação a outros cuja ação e aparência sejam mais brilhantes. Encontra grande dificuldade em perdoar ofensas e, quando odeia, faz isso intensamente. Sente-se desprezado e odiado por uma injúria recebida. Desconfia de todos e julga que lhe querem fazer mal. Corre o risco de azedar seu caráter se ceder excessivamente à sua tendência à solidão, o que pode torná-lo egoísta.`, education: `Contra a insegurança e a indecisão é necessário infundir-lhes uma grande confiança em Deus e em si mesmos, ou seja, nas capacidades que Deus deu-lhes para realizar grandes empresas. Quando confiam em Deus e também nas suas próprias forças, tornam-se mais seguros e confiantes. Em seguida é necessário ensinar-lhes a tomar decisões, ainda que não tenham todos os dados que eles gostariam de ter antes de decidir. Finalmente para vencer a sua timidez, devem aprender a socializar-se e a divertir-se com seus amigos. Contra a susceptibilidade: deve-se aproveitar a sua inclinação à reflexão para fazer-lhes compreender que não é bom que sejam tão suscetíveis, que se alguém os trata mal, isto não significa que essa pessoa os odeia. Também devem encontrar um modo eficaz de exteriorizar seus sentimentos para poder desabafá-los e jamais chegar a cair na tristeza. Enfim é também importante que aprendam a perdoar as ofensas recebidas e a sarar as feridas que deixaram as ofensas passadas. Contra o seu juízo próprio e a sua teimosia: é necessário mostrar-lhe que ele também pode errar e que por isso não deve confiar tanto em seu juízo próprio, mas sim considerar as opiniões dos outros sem pré-juízos, para ver quem é que está certo. Deste modo ele evitará a teimosia e se manterá flexível às opiniões dos outros, para estar sempre aberto à verdade. Contra a sua disposição à crítica: deve tentar pensar sempre bem do próximo. E cuidar-se para não pensar e nem falar mal dele. Contra o apego a seus bens e a sua ordem: devem ser indiferentes aos bens materiais e aceitar com paciência todas aquelas circunstâncias que desfazem seus planos.` },
+            Apático: { description: `É não emotivo (não é facilmente impressionável), não ativo (não tende internamente à ação, e está mais para passivo) e secundário (ou seja, mantém as impressões recebidas por um longo tempo e está intimamente ligado ao seu passado). Entre suas características gerais, destaca-se a falta de vitalidade e isolamento. Evita envolver-se no trato e na atividade de outras pessoas. Não se aborrece com seus companheiros, porém estes não significam muito para ele, embora deva-se ter em mente que nisso existem muitos tipos intermediários. Também possui docilidade, mais é aparente, porque o que se observa é pouca força afetiva. Prefere a vida tranquila, independente da agitação social. Não mostra grande inclinação para o trabalho prático, mas antes tende para o teórico. É dócil e conformista, pelo que se adapta bem às regras de onde lhe corresponde viver.`, positives: `Um elemento positivo é a persistência, a firmeza e a tenacidade. É capaz de disciplina e regularidade. Geralmente não entra em conflito com os demais. Seu campo favorito é o da abstração e gosta mais de matemática do que de ciência experimental e trabalho prático.`, negatives: `Como aspectos negativos, temos que indicar a falta de dinamismo psíquico que quase sempre supõe um desequilíbrio do sistema neurovegetativo e, portanto, uma provável insuficiência endócrina. Tende a não se preocupar consigo mesmo ou com seus colegas e a viver passivamente. Devido à sua reserva, seu ar meditativo, simula uma certa riqueza interior. Mas existe o perigo de que seja apenas um disfarce e, na verdade, não tenha interesse nem entusiasmo em sua vida. Seu interesse também pode ser polarizado em direção a um egocentrismo fechado, no qual lhe atraia apenas seu próprio bem-estar, o cuidado de si mesmo e o divertimento. Tende a não se envolver em atividades altruístas que exigem esforço e sacrifício.`, education: `Contra a sua insensibilidade e passividade: é necessário acender em seus corações a chama de um ideal, que dê motivo à suas atividades. Devem ter convicções profundas e exigir-lhes esforços contínuos e ordenados para alcançar a santidade. Contra a insegurança e a indecisão: é necessário infundir-lhes uma grande confiança em Deus e em si mesmos, ou seja, nas capacidades que Deus deu-lhes para realizar grandes empresas. Quando confiam em Deus e também nas suas próprias forces, tornam-se mais seguros e confiantes. Em seguida é necessário ensinar-lhes a tomar decisões, ainda que não tenham todos os dados que eles gostariam de ter antes de decidir. Finalmente para vencer a sua timidez, tem que aprender a socializar-se e a divertir-se com seus amigos. Contra o seu juízo próprio e a sua teimosia: é necessário mostrar-lhe (como se faz com o sentimental) que ele também pode errar e que por isso não deve confiar tanto em seu juízo próprio, mas sim considerar as opiniões dos outros sem pré-juízos, para ver quem é que está certo. Deste modo ele evitará a teimosia e se manterá flexível às opiniões dos outros, para estar sempre aberto à verdade. Contra o apego a seus bens e a sua ordem: devem ser indiferentes aos bens materiais e aceitar com paciência todas aquelas circunstâncias que desfazem seus planos.` },
+            Fleumático: { description: `É não emotivo (isto é, não é facilmente impressionável), ativo (com uma tendência interna à ação, não importa se tem metas definidas ou não) e secundário (isto é, guarda as impressões recebidas por um longo tempo e está muito ligado ao seu passado). Como características gerais, digamos que ele apresenta uma personalidade vigorosamente estruturada, sem interrupções, com um fundo riquíssimo de energia ativa. Não possui sentimentos internos, mas sim constância e tenacidade na ação. Homem sem grandes paixões, dificilmente excitável, mantém-se em constante tranquilidade afetiva. Raramente violento e superexcitado na ação. Extremamente paciente. Pouco falante, quando se comunica faz isso com medida e Quase nunca levanta a voz. Reduz ao mínimo as expressões de afeto, geralmente dando muitas vezes a sensação de frieza. Continuamente ocupado, meticulosamente ordenado e metódico em toda conduta. Geralmente não gosta da vida social, embora seja fiel às amizades. Espírito claro e lógico, seus interesses preponderantes são mais intelectuais: estudos especulativos, matemática, direito, literatura. É simples em suas coisas e raramente vaidoso. É assíduo na ação, embora lento e calmo. Suas obras estão de acordo com suas ideias e princípios. Mostra grande retidão moral, quase inflexível. Reflexivo e extremamente prudente, não se decide por nenhum projeto até que as últimas probabilidades de sucesso sejam calculadas, pesando todas as dificuldades. Uma vez decidido, se dedica com seriedade e constância ao trabalho. Econômico, honesto e sincero, ele não se altera com as ofensas, não toma conhecimento ou as aceita com humor alegre. Em momentos de perigo é indeciso, embora não seja facilmente perturbado. Mantém sua serenidade, mas não age com prontidão. Se comete alguma falta, não se chateia demasiado. Sua inteligência está mais apta para aprofundar do que para pensar rapidamente. Se destaca por seu senso prático e conhecimento das pessoas. Bom organizador, objetivo e realista, tem pouco vigor imaginativo e não é muito inclinado à criação artística.`, positives: `Enfatizamos sua tranquilidade em receber todos os eventos. As dificuldades não o preocupam. Conserva facilmente o equilíbrio entre pensar e agir, entre o sentimento e a ação. Sem paixões violentas, é sóbrio e Moderado e não se deixa levar por seus primeiros impulsos. Amigo da reflexão e da lenta consideração das coisas, é de pensamento maduro e profundo em suas convicções religiosas e critérios fundamentais. Paciente em tolerar os outros, seus sentimentos são facilmente benevolentes e gentis. Pouco inclinado à pompa e ao brilho, é natural e simples, sem ambições exageradas. Não costuma mentir. O que não consegue por uma atividade rápida, alcança por sua constância. Como um homem prático, sabe tirar proveito dos meios e procura mais o útil do que o chamativo. Gosta de obrigações claramente definidas. Adequado para tudo que requer ordem e constância, por isso tem habilidades de grande colaborador. Isso e seu profundo senso de dever o capacitam para cargos diretivos de grande responsabilidade social e administração cuidadosa. Em seus trabalhos, é geralmente eficiente, seguro e assíduo.`, negatives: `Sua tranquilidade sentimental pode degenerar em uma espécie de apatia, negligenciando tudo sem demonstrar interesse ou entusiasmo por coisa alguma. Isso tende a endurecer visivelmente seu coração, tornando-o frio e insensível com os outros e gradualmente levando-o a um egoísmo calculista e ao orgulho autossuficiente. Tende a ser um escravo de sua organização, costume e método. De sua parte, é possível que exagere sua prudência e previsão a ponto de não começar nada, pensando demasiadamente nas possíveis dificuldades, desperdiçando, assim, as ocasiões propícias. Isso o faz acovardar-se em mais de uma ocasionão e, o que é paradoxal em um caráter ativo, pode deixá-lo preguiçoso ao esquivar-se de uma ação para evitar seus possíveis fracassos ou perigos, ou simplesmente para defender sua solidão e independência da agitação e da convivência social. Nesses casos, geralmente se refugia na atividade mental (preferencialmente imaginativa), preferindo sistematicamente em sua ação exterior o que é confortável e fácil, afastando-se do que possa parecer difícil ou árduo.`, education: `Contra a sua apatia e desinteresse: é necessário acender em seus corações a chama de um ideal, que dê motivo a suas atividades e sobretudo a suas iniciativas, já que o problema do fleumático não é a falta de atividade, mas sim a falta de empolgação. Contra o egoísmo: deve aprender a amar e a interessar-se pelos problemas de seus amigos e companheiros. Contra a lentidão: deve adquirir a capacidade de fazer as coisas rapidamente (para poder agir desse modo quando as circunstâncias o exijam). Contra a timidez: deve aprender a ser mais sociável e a divertir-se com seus amigos. Contra a sua falta de iniciativa: é necessário ensinar-lhe a não exagerar em sua prudência e previsão e lançar-se à realização de seus projetos.` },
+            Nervoso: { description: `É emotivo (isto é, impressionável frente a qualquer tipo de estímulo), não ativo (isto é, não tende internamente à ação) e primário (isto é, reage de imediato, mas também retorna rapidamente ao estado anterior). Em geral, tem grande variabilidade de sentimentos. Sua vitalidade é tumultuosa, pouco coerente e ordenada. Interessa-se, principalmente, por sua vida subjetiva, rica e complexa: homem de problemas interiores, tensões, alegrias intensas e sofrimentos que se sucedem e o fazem pensar muito em si mesmo. Pode manter as impressões por um longo tempo. Sua imaginação é vívida e seu engenho, vivaz; tem qualidades artísticas e talento musical. Mas, pela mesma razão, é extremamente sugestionável, curioso, ama o que lhe dá prazer momentâneo, o impressionante. Sente vivamente as injúrias e o mostra com alterações de gênio, embora passageiras. Essa excitabilidade pode torná-lo muito indisciplinado, rebelde e rude ao lidar com aqueles que o machucam (ou crê que o ofendem). Fica facilmente abatido quando falha e faz propósitos para se corrigir, mas logo os esquece. Tende, também, a se supervalorizar, enfatizando mentalmente suas boas qualidades e prestando pouca atenção aos seus defeitos. Sente necessidade de chamar a atenção, ser admirado e desabafar suas frequentes explosões ou impulsos. Inteligência mais intuitiva que dedutiva; mais concreta que abstrata. É ágil, seus nervos estão sempre tensos, mas não persevera muito em seu esforço contínuo e penoso. Altamente influenciável, tende rapidamente a pensar, sentir e agir como aqueles com os quais se relaciona, devido à sua grande capacidade de sintonia psíquica. Isso o torna muito adaptável a novos ambientes. Sabe exercer certa sedução nos outros, pois costuma ser muito simpático com quem se compatibiliza com ele.`, positives: `O nervoso tem um coração muito sensível. É inclinado à bondade e à compaixão, sendo extremamente generoso. Muito atento às necessidades e gostos alheios, com uma ajuda espontânea e afetuosa ao lidar com aqueles a quem admira ou sabe que o apreciam e o amam. Possui um tato aguçado e sabe ser diplomático quando deseja. Se lhe enviam alguém a quem aprecia como superior, é dócil e obediente. Seu espírito atencioso lhe comunica uma graça e um dom especial para o trato. Tem aptidão para confortar uma pessoa abatida.`, negatives: `A raiz de seus defeitos é a sua sensibilidade. Para lidar com ele, é preciso ver "com que humor está hoje". Se ele se deixa dominar por seus sentimentos, torna-se insuportável para seus colegas. Pode se tornar tão suscetível que se sentirá ferido se o encaram, e desprezado se não o olham. Também é inclinado à vaidade e à sensualidade. Vive de impressões, de ímpetos momentâneos. Se ele se entregar a isso, não fará nada de grande e sério. É imprevisível e inimigo de tudo o que exige esforço e disciplina metódica (mental ou física). Essa inconsistência é seu principal defeito. Além disso, devido a essa dependência de impressões momentâneas, muda facilmente de ideia e de ocupação. Pode se tornar escravo do momento presente.`, education: `Tem que ser dono de si mesmo para não deixar-se dominar por seus sentimentos. Tem que aproveitar a sua emotividade para dar-se a si mesmo motivos de amor ou temor que o ajudem a realizar com fidelidade e constância aquelas atividades que planejara. Precisam adquirir as virtudes da humildade, contra a vanglória e o gosto por aparecer; E a temperança, contra a sensualidade.` },
+            Amorfo: { description: `É não emotivo (não é facilmente impressionável), não ativo (não tende internamente à ação, e está mais para passivo) e primário (isto é, reage rapidamente, mas rapidamente retorna ao estado anterior). Embora essa figura temperamental não seja comum, indiquemos que, quando ocorre, tem, como características gerais, o ser muito influenciável pelo ambiente; é otimista, amável no trato, notavelmente sugestionável. Sociável, mas com tendência a evitar o esforço pessoal exigido por trabalhos comuns. É preguiçoso, mas em alguns a preguiça se disfarça de atividade fazendo coisas que gostam, apesar de fugir do que deveria fazer ou se contenta com o que é estritamente obrigatório. Rapidamente se cansa e tem pouco senso de realidade.`, positives: `São sua valentia que se manifesta mais na capacidade de resistir, sendo imperturbável diante do perigo. Costuma ter entendimento prático e extrema sociabilidade, precisa de outras pessoas para agir, fazendo as coisas com prazer. Não raramente possui uma verdadeira aptidão para a arte cênica. Com frequência, possui habilidades de execução musical.`, negatives: `O mais notável é a preguiça. É por isso que deixa o esforço para o último momento até que as necessidades o obriguem. Naturalmente, isso o torna frequentemente irresponsável e impontual. Muitas vezes essa preguiça depende de causas orgânicas (astenia constitucional ou acidental). É algo inábil para coisas que exigem ordem. Negligente e às vezes descuidado na limpeza. É facilmente influenciado pelo ambiente em que vive e isso pode colocá-lo em sério perigo. Sua inatividade é um obstáculo para a solicitude, tornando-o cada vez mais egocêntrico. Corre o risco de sempre voar ao nível do chão.`, education: `Contra a sua apatia e desinteresse: é necessário acender em seus corações a chama de um ideal, que dê motivo a suas atividades. Contra a inconstância: deve procurar ter um plano de vida, fazer bem o exame de consciência, pôr-se nas mãos do diretor espiritual e obedecer-lhe em tudo.` }
+        };
+        
+        // --- LÓGICA DA APLICAÇÃO ---
+        let currentTemperament = '';
+        let currentScores = null;
+        let allQuestions = [];
+        let userAnswers = [];
+        let currentQuestionIndex = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const allScreens = document.querySelectorAll('#main-content > div, .quiz-container');
+            const navMyResult = document.getElementById('nav-my-result');
+            const navAllTemperaments = document.getElementById('nav-all-temperaments');
+            
+            const startScreen = document.getElementById('start-screen');
+            const quizScreen = document.getElementById('quiz-screen-typeform');
+            const resultScreen = document.getElementById('result-screen');
+            const allTemperamentsScreen = document.getElementById('all-temperaments-screen');
+
+            const startBtn = document.getElementById('start-btn');
+            const retakeBtn = document.getElementById('retake-btn');
+            const geminiBtn = document.getElementById('gemini-btn');
+            const temperamentList = document.getElementById('temperament-list');
+            const progressBarContainer = document.getElementById('progress-bar-container');
+            const progressBar = document.getElementById('progress-bar');
+            
+            function showScreen(screenToShow) {
+                allScreens.forEach(screen => screen.classList.add('hidden'));
+                screenToShow.classList.remove('hidden');
+                progressBarContainer.classList.add('hidden');
+            }
+
+            function setActiveNav(activeButton) {
+                [navMyResult, navAllTemperaments].forEach(btn => btn.classList.remove('active'));
+                activeButton.classList.add('active');
+            }
+
+            // --- Funções de Navegação ---
+            function showMyResultView() {
+                setActiveNav(navMyResult);
+                const savedTemperament = localStorage.getItem('userTemperament');
+                const savedScores = JSON.parse(localStorage.getItem('userScores'));
+                if (savedTemperament && savedScores) {
+                    displayResult(savedTemperament, true, savedScores);
+                } else {
+                    showScreen(startScreen);
+                }
+            }
+
+            function showAllTemperamentsView() {
+                setActiveNav(navAllTemperaments);
+                temperamentList.innerHTML = '';
+                Object.keys(temperamentsData).forEach(name => {
+                    const button = document.createElement('button');
+                    button.className = 'text-left p-4 bg-gray-100 hover:bg-blue-100 rounded-lg transition-colors';
+                    button.textContent = name;
+                    button.onclick = () => displayResult(name, false);
+                    temperamentList.appendChild(button);
+                });
+                showScreen(allTemperamentsScreen);
+            }
+
+            function startQuiz() {
+                allQuestions = [];
+                ['emotividade', 'atividade', 'ressonancia'].forEach(section => {
+                    quizData[section].forEach(q => {
+                        allQuestions.push({...q, section: section});
+                    });
+                });
+                userAnswers = new Array(allQuestions.length).fill(null);
+                currentQuestionIndex = 0;
+                showScreen(quizScreen);
+                progressBarContainer.classList.remove('hidden');
+                renderCurrentQuestion();
+            }
+
+            function renderCurrentQuestion() {
+                const questionData = allQuestions[currentQuestionIndex];
+                const progress = ((currentQuestionIndex) / allQuestions.length) * 100;
+                
+                const sectionColors = {
+                    emotividade: 'bg-red-500',
+                    atividade: 'bg-green-500',
+                    ressonancia: 'bg-blue-500'
+                };
+                const sectionTextColors = {
+                    emotividade: 'text-red-500',
+                    atividade: 'text-green-500',
+                    ressonancia: 'text-blue-500'
+                };
+
+                progressBar.className = `h-full ${sectionColors[questionData.section]}`;
+                progressBar.style.width = `${progress}%`;
+
+                const oldSlide = quizScreen.querySelector('.question-slide');
+                if (oldSlide) {
+                    oldSlide.classList.add('exiting');
+                    oldSlide.addEventListener('transitionend', () => oldSlide.remove(), { once: true });
+                }
+
+                const slide = document.createElement('div');
+                slide.className = 'question-slide';
+                
+                const options = [];
+                const optionA = { text: questionData.a, value: 1 };
+                const optionB = { text: questionData.b, value: 0 };
+                const optionIndeciso = { text: "Estou indeciso / Um pouco de cada.", value: 0.5 };
+                
+                if (questionData.bIsFirst) {
+                    options.push(optionB, optionA, optionIndeciso);
+                } else {
+                    options.push(optionA, optionB, optionIndeciso);
+                }
+
+                let optionsHTML = '';
+                options.forEach((opt, index) => {
+                    optionsHTML += `
+                        <button type="button" class="option-btn" data-value="${opt.value}">
+                            <span class="option-key">${index + 1}</span>
+                            <span>${opt.text}</span>
+                        </button>
+                    `;
+                });
+                
+                const sectionName = questionData.section.charAt(0).toUpperCase() + questionData.section.slice(1);
+                const questionNumberInSection = (currentQuestionIndex % 10) + 1;
+
+                slide.innerHTML = `
+                    <div class="mb-4 text-sm font-bold tracking-wider uppercase ${sectionTextColors[questionData.section]}">
+                        ${sectionName} - Pergunta ${questionNumberInSection} de 10
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-6">${questionData.question}</h3>
+                    <div>${optionsHTML}</div>
+                `;
+
+                quizScreen.appendChild(slide);
+                
+                requestAnimationFrame(() => {
+                    slide.classList.add('active');
+                });
+
+                slide.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', handleAnswer);
+                });
+            }
+
+            function handleAnswer(event) {
+                const value = parseFloat(event.currentTarget.dataset.value);
+                userAnswers[currentQuestionIndex] = value;
+                
+                if (currentQuestionIndex < allQuestions.length - 1) {
+                    currentQuestionIndex++;
+                    setTimeout(renderCurrentQuestion, 150);
+                } else {
+                    progressBar.style.width = '100%';
+                    const currentSlide = quizScreen.querySelector('.question-slide.active');
+                    if (currentSlide) {
+                        currentSlide.classList.add('exiting');
+                        currentSlide.addEventListener('transitionend', calculateResult, { once: true });
+                    } else {
+                        calculateResult();
+                    }
+                }
+            }
+            
+            function handleKeyPress(event) {
+                if(quizScreen.classList.contains('hidden')) return;
+
+                const slide = quizScreen.querySelector('.question-slide.active');
+                if(!slide) return;
+
+                const options = slide.querySelectorAll('.option-btn');
+                let choice = -1;
+
+                if (event.key === '1') choice = 0;
+                if (event.key === '2') choice = 1;
+                if (event.key === '3') choice = 2;
+
+                if (choice !== -1 && options[choice]) {
+                    options[choice].click();
+                }
+            }
+
+            function calculateResult() {
+                let scores = { emotividade: 0, atividade: 0, ressonancia: 0 };
+                userAnswers.forEach((answer, index) => {
+                    if (index < 10) scores.emotividade += answer;
+                    else if (index < 20) scores.atividade += answer;
+                    else scores.ressonancia += answer;
+                });
+                
+                const isEmotivo = scores.emotividade >= 5;
+                const isAtivo = scores.atividade >= 5;
+                const isSecundario = scores.ressonancia >= 5;
+
+                let temperament = '';
+                if (isEmotivo && isAtivo && isSecundario) temperament = 'Apaixonado';
+                else if (isEmotivo && isAtivo && !isSecundario) temperament = 'Colérico';
+                else if (!isEmotivo && isAtivo && !isSecundario) temperament = 'Sanguíneo';
+                else if (isEmotivo && !isAtivo && isSecundario) temperament = 'Sentimental';
+                else if (!isEmotivo && !isAtivo && isSecundario) temperament = 'Apático';
+                else if (!isEmotivo && isAtivo && isSecundario) temperament = 'Fleumático';
+                else if (isEmotivo && !isAtivo && !isSecundario) temperament = 'Nervoso';
+                else if (!isEmotivo && !isAtivo && !isSecundario) temperament = 'Amorfo';
+                
+                localStorage.setItem('userTemperament', temperament);
+                localStorage.setItem('userScores', JSON.stringify(scores));
+                displayResult(temperament, true, scores);
+            }
+
+            function renderResultChart(scores) {
+                const container = document.getElementById('result-chart-container');
+                if (!scores) {
+                    container.innerHTML = '';
+                    return;
+                }
+
+                const roundedScores = {
+                    emotividade: Math.round(scores.emotividade),
+                    atividade: Math.round(scores.atividade),
+                    ressonancia: Math.round(scores.ressonancia)
+                };
+
+                let chartHTML = '<div class="result-chart">';
+                chartHTML += '<div class="chart-row chart-header"><div class="chart-label"></div>';
+                for (let i = 0; i <= 10; i++) {
+                    chartHTML += `<div class="chart-cell">${i}</div>`;
+                }
+                chartHTML += '</div>';
+
+                const rows = [
+                    { label: 'Emotividade', score: roundedScores.emotividade, neg: 'não Emotivo', pos: 'Emotivo', classPrefix: 'emotividade' },
+                    { label: 'Atividade', score: roundedScores.atividade, neg: 'não Ativo', pos: 'Ativo', classPrefix: 'atividade' },
+                    { label: 'Ressonância', score: roundedScores.ressonancia, neg: 'Primário', pos: 'Secundário', classPrefix: 'ressonancia' }
+                ];
+
+                rows.forEach(row => {
+                    chartHTML += `<div class="chart-row"><div class="chart-label">${row.label}</div>`;
+                    for (let i = 0; i <= 10; i++) {
+                        const isMarker = i === row.score;
+                        const cellClass = i < 5 ? `${row.classPrefix}-neg` : (i > 5 ? `${row.classPrefix}-pos` : '');
+                        chartHTML += `<div class="chart-cell ${cellClass}">${isMarker ? '<span class="chart-marker">⊗</span>' : ''}</div>`;
+                    }
+                    chartHTML += '</div>';
+                });
+
+                chartHTML += '</div>';
+                container.innerHTML = chartHTML;
+            }
+
+            function displayResult(temperament, isMyResult, scores = null) {
+                const data = temperamentsData[temperament];
+                if (!data) return;
+
+                currentTemperament = temperament;
+                currentScores = scores;
+
+                document.getElementById('temperament-title').textContent = temperament;
+                document.getElementById('temperament-description').innerHTML = `<p class="mb-4 text-lg">${data.description}</p><h3>Aspectos Positivos</h3><p>${data.positives}</p><h3>Aspectos Negativos</h3><p>${data.negatives}</p><h3>Educação</h3><p>${data.education}</p>`;
+                
+                renderResultChart(scores);
+
+                document.getElementById('result-pre-title').textContent = isMyResult ? 'Seu resultado detalhado:' : 'Temperamento:';
+                document.getElementById('gemini-section').style.display = 'block';
+                document.getElementById('actions-section').style.display = isMyResult ? 'block' : 'none';
+
+                document.getElementById('gemini-result').innerHTML = '';
+                document.getElementById('gemini-btn').style.display = 'block';
+                
+                showScreen(resultScreen);
+                window.scrollTo(0, 0);
+            }
+
+            async function generateGrowthPlan() {
+                const geminiLoader = document.getElementById('gemini-loader');
+                const geminiResult = document.getElementById('gemini-result');
+                const geminiBtn = document.getElementById('gemini-btn');
+                geminiBtn.style.display = 'none';
+                geminiLoader.classList.remove('hidden');
+                geminiResult.innerHTML = '';
+                const temperamentInfo = temperamentsData[currentTemperament];
+                const prompt = `Você é um conselheiro espiritual experiente, criativo e prático. Sua tarefa é criar um plano de crescimento para uma pessoa com o temperamento '${currentTemperament}'.
+
+**Contexto do Temperamento:**
+* **Pontos a serem trabalhados (Negativos):** ${temperamentInfo.negatives}
+* **Conselhos para Educação:** ${temperamentInfo.education}
+
+**Sua Resposta (IMPORTANTE):**
+Responda APENAS com o plano de crescimento em português do Brasil. NÃO repita nenhuma parte desta instrução. O plano deve ser original, encorajador e prático. A cada vez, tente gerar novas ideias de ações e santos.
+
+**Use EXATAMENTE o seguinte formato Markdown:**
+#### Virtude principal a cultivar
+**[Escreva a virtude aqui]**
+
+#### Ações concretas para a semana
+- [Ação 1]
+- [Ação 2]
+- [Ação 3]
+
+#### Inspiração
+**[Nome do Santo/Figura]:** [Explique a conexão e como ele(a) pode ser uma inspiração]
+`;
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; 
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) { throw new Error(`API Error: ${response.statusText}`); }
+                    const result = await response.json();
+                    if (result.candidates && result.candidates[0]?.content?.parts?.[0]) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        let htmlResult = text.replace(/#### (.*?)(\r\n|\n)/g, '<h4 class="text-lg font-semibold text-purple-800 mt-4 mb-2">$1</h4>');
+                        htmlResult = htmlResult.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                        
+                        htmlResult = htmlResult.replace(/(\n- .+(?:\n- .+)*)/g, (match) => {
+                            return '<ul>' + match.replace(/\n- /g, '<li>').replace(/<li>/g, '<li class="ml-5">') + '</ul>';
+                        });
+
+                        htmlResult = htmlResult.replace(/\n/g, '<br>');
+                        
+                        geminiResult.innerHTML = htmlResult;
+                    } else {
+                        geminiResult.innerHTML = '<p class="text-red-500">Não foi possível gerar o plano. A resposta da IA estava vazia. Tente novamente.</p>';
+                        geminiBtn.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    geminiResult.innerHTML = `<p class="text-red-500">Ocorreu um erro ao gerar o plano de crescimento. Por favor, verifique sua conexão e tente novamente. Detalhe: ${error.message}</p>`;
+                    geminiBtn.style.display = 'block';
+                } finally {
+                    geminiLoader.classList.add('hidden');
+                }
+            }
+            
+            // Event Listeners
+            navMyResult.addEventListener('click', showMyResultView);
+            navAllTemperaments.addEventListener('click', showAllTemperamentsView);
+            startBtn.addEventListener('click', startQuiz);
+            retakeBtn.addEventListener('click', () => {
+                localStorage.removeItem('userTemperament');
+                localStorage.removeItem('userScores');
+                showScreen(startScreen);
+            });
+            geminiBtn.addEventListener('click', generateGrowthPlan);
+            document.addEventListener('keydown', handleKeyPress);
+            
+            // Initial Load
+            showMyResultView();
+        });
+    </script>
+
+</body>
+</html>
