@@ -5,6 +5,10 @@ on:
     branches:
       - master # Mude para 'main' se o seu ramo principal for esse
 
+# ADICIONAR ESTA SEÇÃO DE PERMISSÕES
+permissions:
+  contents: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -23,7 +27,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      # CORREÇÃO: Usar uma ação de deploy mais explícita
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
