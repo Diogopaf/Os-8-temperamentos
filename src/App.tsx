@@ -1,22 +1,22 @@
-// Imports dos providers e UI
-import { Toaster } from "./components/ui/toaster";
-import { Toaster as Sonner } from "./components/ui/sonner";
-import { TooltipProvider } from "./components/ui/tooltip";
+// Imports dos providers e UI, usando os caminhos corretos com "@"
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Imports do layout e rotas
 import { Route, Routes, Link } from "react-router-dom";
 import { Flame, Menu } from "lucide-react";
-import { Sidebar } from "./components/ui/sidebar";
-import { Sheet, SheetContent, SheetTrigger } from "./components/ui/sheet";
-import { Button } from "./components/ui/button";
+import { Sidebar } from "@/components/ui/sidebar";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
-// Imports das páginas
-import { Index } from "./pages/Index";
-import { Test } from "./pages/Test";
-import { Result } from "./pages/Result";
-import { Temperaments } from "./pages/Temperaments";
-import { NotFound } from "./pages/NotFound";
+// Imports das páginas, usando os caminhos corretos com "@"
+import { Index } from "@/pages/Index";
+import { Test } from "@/pages/Test";
+import { Result } from "@/pages/Result";
+import { Temperaments } from "@/pages/Temperaments";
+import { NotFound } from "@/pages/NotFound";
 
 // Cria uma instância do QueryClient
 const queryClient = new QueryClient();
@@ -91,4 +91,3 @@ function App() {
 }
 
 export default App;
-// Forçar atualização
