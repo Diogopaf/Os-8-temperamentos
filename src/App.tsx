@@ -11,12 +11,12 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 
-// Imports das páginas, usando os caminhos corretos com "@"
-import { Index } from "@/pages/Index";
-import { Test } from "@/pages/Test";
-import { Result } from "@/pages/Result";
-import { Temperaments } from "@/pages/Temperaments";
-import { NotFound } from "@/pages/NotFound";
+// Imports das páginas, agora como 'default' (sem chavetas)
+import Index from "@/pages/Index";
+import Test from "@/pages/Test";
+import Result from "@/pages/Result";
+import Temperaments from "@/pages/Temperaments";
+import NotFound from "@/pages/NotFound";
 
 // Cria uma instância do QueryClient
 const queryClient = new QueryClient();
