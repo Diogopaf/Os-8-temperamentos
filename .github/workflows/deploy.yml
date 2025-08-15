@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master  # Mude para 'main' se o seu ramo principal for esse
+      - master # Mude para 'main' se o seu ramo principal for esse
 
 jobs:
   build-and-deploy:
@@ -15,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # Pode ajustar para a sua versão do Node.js
+          node-version: '18'
 
       - name: Install dependencies
         run: npm install
@@ -23,8 +23,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      # CORREÇÃO: Usar uma ação de deploy mais explícita
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          branch: gh-pages # O ramo para onde os ficheiros de build serão enviados
+          folder: dist # A pasta que será publicada
